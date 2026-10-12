@@ -6,5 +6,6 @@ import {CentrePointCinematicIntro} from './projects/vungtau-centrepoint/CentrePo
 export const Root: React.FC=()=> <>
  <Composition id="VungTauCentrePoint" component={CentrePointVideo} durationInFrames={900} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointCinematicIntro" component={CentrePointCinematicIntro} durationInFrames={150} fps={30} width={1080} height={1920}/>
+ <Composition id="CentrePointHero3DIntro" component={()=><CentrePointCity3DIntro hero/>} durationInFrames={150} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointCity3DIntro" component={CentrePointCity3DIntro} durationInFrames={150} fps={30} width={1080} height={1920}/>
 </>;
