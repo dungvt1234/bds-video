@@ -1,0 +1,34 @@
+name: Centre Point Hero Building 3D preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointHeroBuilding.tsx'
+      - 'src/projects/vungtau-centrepoint/CentrePointCity3DIntro.tsx'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-hero3d.yml'
+  workflow_dispatch:
+jobs:
+  hero-3d-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Render hero building five-second preview
+        run: npx remotion render src/index.ts CentrePointHero3DIntro out/centrepoint-hero-3d-5s.mp4 --codec h264 --concurrency 2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-hero-3d-5s
+          path: out/centrepoint-hero-3d-5s.mp4
+          retention-days: 7
+          if-no-files-found: error
