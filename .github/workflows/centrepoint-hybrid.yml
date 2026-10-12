@@ -1,5 +1,12 @@
 name: Centre Point Hybrid 2.5D 5s preview
 on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - '.github/workflows/centrepoint-hybrid.yml'
+      - 'public/centrepoint-reference.webp'
+      - 'src/projects/vungtau-centrepoint/CentrePointHybridIntro.tsx'
+      - 'src/root.tsx'
   workflow_dispatch:
 jobs:
   hybrid-preview:
