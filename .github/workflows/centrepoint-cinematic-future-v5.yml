@@ -39,14 +39,43 @@ jobs:
         run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-05-network.png --frame=735
       - name: Render complete silent 30s master
         run: npx remotion render src/index.ts CentrePointCinematicFutureV5 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4 --codec h264 --concurrency 2
-      - name: Verify NO audio stream
+      - name: Verify true zero-audio MP4 tracks without ffprobe
         run: |
-          if ffprobe -v error -select_streams a -show_entries stream=codec_name -of csv=p=0 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4 | grep -q '.'; then
-            echo 'FAIL: MP4 unexpectedly has an audio stream'
-            exit 1
-          fi
-          ffprobe -v error -select_streams v -show_entries stream=codec_name,width,height,r_frame_rate -of csv=p=0 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4
-          echo 'PASS: zero audio streams'
+          python3 - <<'PY'
+          from pathlib import Path
+          from struct import unpack_from
+          p=Path('out/centrepoint-cinematic-future-v5-SILENT-30s.mp4')
+          data=p.read_bytes()
+          def boxes(start,end):
+              i=start
+              while i+8<=end:
+                  size,name=unpack_from('>I4s',data,i)
+                  header=8
+                  if size==1:
+                      if i+16>end: raise RuntimeError('truncated extended atom')
+                      size=unpack_from('>Q',data,i+8)[0]
+                      header=16
+                  elif size==0:
+                      size=end-i
+                  if size<header or i+size>end:
+                      raise RuntimeError('invalid MP4 box '+repr(name))
+                  yield name,i+header,i+size
+                  i+=size
+          handlers=[]
+          for box,lo,hi in boxes(0,len(data)):
+              if box!=b'moov': continue
+              for tag,a,b in boxes(lo,hi):
+                  if tag!=b'trak': continue
+                  for tag2,x,y in boxes(a,b):
+                      if tag2!=b'mdia': continue
+                      for tag3,z,w in boxes(x,y):
+                          if tag3==b'hdlr':
+                              if w-z<12: raise RuntimeError('broken handler metadata')
+                              handlers.append(data[z+8:z+12].decode('ascii',errors='replace'))
+          assert 'vide' in handlers, 'FAIL: no video track found'
+          assert 'soun' not in handlers, f'FAIL: sound track unexpectedly present: {handlers}'
+          print('PASS: MP4 track types:', handlers, '(video only, no audio)')
+          PY
       - name: Upload MP4 and review frames
         uses: actions/upload-artifact@v4
         with:
