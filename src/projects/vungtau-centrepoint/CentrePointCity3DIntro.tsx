@@ -52,7 +52,7 @@ const City:React.FC<{frame:number}>=({frame})=>{
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1,0]}>
    <planeGeometry args={[8500,8500]}/><meshStandardMaterial color="#081823" roughness={1}/>
   </mesh>
-  {preparedRoads.map((g,i)=><line key={i} geometry={g} material={road}/>)}
+  {preparedRoads.map((g,i)=><primitive key={i} object={new THREE.Line(g,road)}/>)}
   {preparedBuildings.map((b,i)=><mesh key={i} geometry={b.geometry} material={b.material==='measured'?measured:estimated}/>)}
   <mesh position={[0,48,0]} material={glow}><sphereGeometry args={[13,20,12]}/></mesh>
   <mesh position={[0,5,0]} rotation={[-Math.PI/2,0,0]}>
