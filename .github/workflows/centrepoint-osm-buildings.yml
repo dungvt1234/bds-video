@@ -1,0 +1,28 @@
+name: Centre Point real-map building data candidate
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/data/fetch-buildings.mjs'
+      - '.github/workflows/centrepoint-osm-buildings.yml'
+  workflow_dispatch:
+jobs:
+  osm-building-candidate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch actual OSM footprints (candidate only)
+        run: node src/projects/vungtau-centrepoint/data/fetch-buildings.mjs
+      - name: Upload data for visual review; do not commit or deploy
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-osm-building-candidate
+          path: src/projects/vungtau-centrepoint/buildings-osm-candidate.geojson
+          if-no-files-found: error
+          retention-days: 7
