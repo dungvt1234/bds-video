@@ -1,0 +1,45 @@
+name: Centre Point schematic preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Validate four candidate routes
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const d=JSON.parse(fs.readFileSync('src/projects/vungtau-centrepoint/routes.geojson','utf8'));
+          const ids=['lotte','hospital','tamthang','baitruoc'];
+          if(d.features?.length!==4)throw Error('Expected exactly four routes');
+          for(const id of ids){
+            const r=d.features.find(f=>f.properties?.id===id);
+            if(!r||r.geometry?.type!=='LineString'||r.geometry.coordinates?.length<2)throw Error('Missing route: '+id);
+            if(!Number.isFinite(r.properties.distanceMeters)||!Number.isFinite(r.properties.durationSeconds))throw Error('Invalid metrics: '+id);
+          }
+          console.log('Four candidate OSRM routes structurally valid; NOT independently verified.');
+          JS
+      - name: Install Chromium for Remotion
+        run: npx remotion browser ensure
+      - name: Render schematic preview only
+        run: npx remotion render src/index.ts VungTauCentrePoint out/centrepoint-schematic-preview.mp4 --concurrency=2 --log=error
+      - name: Upload private review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-schematic-preview
+          path: out/centrepoint-schematic-preview.mp4
+          retention-days: 7
