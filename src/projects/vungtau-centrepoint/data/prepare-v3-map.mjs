@@ -47,8 +47,8 @@ if(!/openstreetmap/i.test(JSON.stringify(basemap.metadata||{})))
  throw Error('NO_GO: OSM provenance not found; inspect source metadata');
 const join=list=>list.join(' ');
 const svg=[
- '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">',
- '<rect width="1080" height="1920" fill="#081D27"/>',
+ '<svg xmlns="http://www.w3.org/2000/svg" width="2160" height="3840" viewBox="-540 -960 2160 3840">',
+ '<rect x="-540" y="-960" width="2160" height="3840" fill="#081D27"/>',
  '<g fill="#152D39" stroke="#31515C" stroke-width=".55" opacity=".92">',
  '<path d="'+join(buildings)+'" fill-rule="evenodd"/>','</g>',
  '<path d="'+join(roads.paths)+'" stroke="#254251" stroke-width="1.25" opacity=".61" stroke-linejoin="round" stroke-linecap="round" fill="none"/>',
