@@ -1,0 +1,23 @@
+name: Centre Point P06-A storyboard check
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointStory30Draft.tsx'
+      - 'src/projects/vungtau-centrepoint/CentrePointVideo.tsx'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-storyboard-check.yml'
+  workflow_dispatch:
+jobs:
+  storyboard-typecheck:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx tsc --noEmit
