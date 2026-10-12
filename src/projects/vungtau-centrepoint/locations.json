@@ -16,7 +16,12 @@
       "id": "lotte",
       "name": "Lotte Mart Vũng Tàu",
       "maps": "https://maps.app.goo.gl/V5tJ59bjFbWvAn1n8",
-      "coordinates": null
+      "coordinates": [
+        107.09403132853949,
+        10.351085400516954
+      ],
+      "coordinateSource": "user-provided Google Maps coordinate",
+      "coordinateStatus": "USER_PROVIDED_NOT_INDEPENDENTLY_VERIFIED"
     },
     {
       "id": "hospital",
