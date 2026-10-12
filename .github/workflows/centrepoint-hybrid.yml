@@ -7,6 +7,7 @@ on:
       - 'public/centrepoint-reference.webp'
       - 'src/projects/vungtau-centrepoint/CentrePointHybridIntro.tsx'
       - 'src/projects/vungtau-centrepoint/CentrePointHybridIntroV2.tsx'
+      - 'src/projects/vungtau-centrepoint/CentrePointGroundRiseIntro.tsx'
       - 'src/root.tsx'
   workflow_dispatch:
 jobs:
@@ -30,6 +31,15 @@ jobs:
         run: npx remotion render src/index.ts CentrePointHybridIntro out/centrepoint-hybrid-5s.mp4 --codec h264 --concurrency 2
       - name: Render V2 improved 5s preview
         run: npx remotion render src/index.ts CentrePointHybridIntroV2 out/centrepoint-hybrid-v2-5s.mp4 --codec h264 --concurrency 2
+      - name: Render ground-rise 5s preview
+        run: npx remotion render src/index.ts CentrePointGroundRiseIntro out/centrepoint-ground-rise-5s.mp4 --codec h264 --concurrency 2
+      - name: Upload ground-rise preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-ground-rise-5s
+          path: out/centrepoint-ground-rise-5s.mp4
+          retention-days: 7
+          if-no-files-found: error
       - name: Upload V2 preview
         uses: actions/upload-artifact@v4
         with:
