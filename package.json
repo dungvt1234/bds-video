@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render:centrepoint": "remotion render src/index.ts VungTauCentrePoint out/centrepoint.mp4"
+    "render:centrepoint": "remotion render src/index.ts VungTauCentrePoint out/centrepoint.mp4",
+    "routes:fetch": "node src/projects/vungtau-centrepoint/data/fetch-routes.mjs"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",
