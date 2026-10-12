@@ -1,0 +1,29 @@
+name: Centre Point Hybrid 2.5D 5s preview
+on:
+  workflow_dispatch:
+jobs:
+  hybrid-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify reference asset
+        run: test -s public/centrepoint-reference.webp
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Render isolated 5s preview
+        run: npx remotion render src/index.ts CentrePointHybridIntro out/centrepoint-hybrid-5s.mp4 --codec h264 --concurrency 2
+      - name: Upload preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-hybrid-5s
+          path: out/centrepoint-hybrid-5s.mp4
+          retention-days: 7
+          if-no-files-found: error
