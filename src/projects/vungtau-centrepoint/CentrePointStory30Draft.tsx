@@ -1,7 +1,7 @@
 import React from 'react';
 import {AbsoluteFill,Sequence,interpolate,spring,useCurrentFrame,useVideoConfig} from 'remotion';
 import {CentrePointGroundRiseIntro} from './CentrePointGroundRiseIntro';
-import {CentrePointVideo} from './CentrePointVideo';
+import {Scene} from './CentrePointVideo';
 import {CentrePointHybridIntroV2} from './CentrePointHybridIntroV2';
 
 /** P06-A editorial assembly. VO text is a script cue, not synthesized audio.
@@ -33,7 +33,11 @@ const Caption:React.FC<{start:number;end:number;kicker:string;headline:string;vo
 export const CentrePointStory30Draft:React.FC=()=>{
  return <AbsoluteFill style={{background:'#06141d'}}>
   <Sequence from={0} durationInFrames={150}><CentrePointGroundRiseIntro/></Sequence>
-  <Sequence from={150} durationInFrames={600}><CentrePointVideo/></Sequence>
+  <Sequence from={150} durationInFrames={120}><Scene sceneId="intro" name="TÂM ĐIỂM KẾT NỐI" subtitle="CITY REVEAL"/></Sequence>
+  <Sequence from={270} durationInFrames={120}><Scene sceneId="lotte" name="LOTTE MART" subtitle="MUA SẮM · GIẢI TRÍ"/></Sequence>
+  <Sequence from={390} durationInFrames={120}><Scene sceneId="hospital" name="BỆNH VIỆN VŨNG TÀU" subtitle="DỊCH VỤ Y TẾ"/></Sequence>
+  <Sequence from={510} durationInFrames={120}><Scene sceneId="tamthang" name="THÁP TAM THẮNG" subtitle="ĐIỂM ĐẾN ĐÔ THỊ"/></Sequence>
+  <Sequence from={630} durationInFrames={120}><Scene sceneId="baitruoc" name="BÃI TRƯỚC" subtitle="KHÔNG GIAN BIỂN"/></Sequence>
   <Sequence from={750} durationInFrames={150}><CentrePointHybridIntroV2/></Sequence>
   {scenes.map(s=><Caption key={s.start} {...s}/>)}
   <div style={{position:'absolute',left:74,right:74,bottom:72,color:'#c1cbd0',fontSize:17,fontFamily:'Arial,sans-serif'}}>BẢN DỰNG NHÁP · TUYẾN ĐƯỜNG / TỌA ĐỘ CHƯA XÁC MINH · CHƯA CÓ THUYẾT MINH</div>
