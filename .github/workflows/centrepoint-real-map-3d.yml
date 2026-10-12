@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -19,12 +20,17 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - name: Fetch real OSM building footprints (fail closed)
-        run: node src/projects/vungtau-centrepoint/data/fetch-buildings.mjs
-      - name: Stage real map data for Remotion
+      - name: Download previously successful verified-source OSM artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh run download 38219012461 --repo "${{ github.repository }}" --name centrepoint-osm-building-candidate --dir /tmp/centrepoint-osm
+          test -s /tmp/centrepoint-osm/buildings-osm-candidate.geojson
           mkdir -p public
-          cp src/projects/vungtau-centrepoint/buildings-osm-candidate.geojson public/centrepoint-buildings.geojson
+          cp /tmp/centrepoint-osm/buildings-osm-candidate.geojson public/centrepoint-buildings.geojson
+      - name: Validate real building data
+        run: |
+          node -e "const d=require('./public/centrepoint-buildings.geojson'); if(!Array.isArray(d.features)||d.features.length<10||d.metadata?.source!=='OpenStreetMap')process.exit(1); console.log('OSM footprints:',d.features.length)"
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Render 5s real map 3D preview
