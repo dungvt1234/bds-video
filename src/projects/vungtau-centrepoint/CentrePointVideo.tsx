@@ -33,7 +33,7 @@ const projectFactory=(points:Point[],marginX=110,marginTop=300,marginBottom=420)
 };
 const overviewProject=projectFactory(allCoordinates);
 const BaseMap:React.FC<{position:(p:Point)=>Point}>=({position})=><g fill="none" strokeLinejoin="round" strokeLinecap="round">{mapFeatures.map((f,i)=>{const coast=f.properties.kind==='coastline';const main=['primary','secondary','trunk'].includes(f.properties.highway||'');const d=f.geometry.coordinates.map((p,j)=>{const [x,y]=position(p);return `${j?'L':'M'}${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ');return <path key={i} d={d} stroke={coast?'#547c8d':main?'#607580':'#354b59'} strokeWidth={coast?3:main?2.5:1.25} opacity={coast?.85:main?.65:.48}/>})}</g>;
-const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,name,subtitle})=>{
+export const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,name,subtitle})=>{
  const frame=useCurrentFrame();
  const focus=routes.find(r=>r.properties.id===sceneId);
  const isOverview=!focus;
