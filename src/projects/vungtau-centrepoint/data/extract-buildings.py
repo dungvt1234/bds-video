@@ -45,7 +45,7 @@ def metres(value):
         return None
     raw = str(value).strip().lower()
     # Only explicit metres (or bare numeric metres per OSM convention).
-    m = re.fullmatch(r"(\\d+(?:\\.\\d+)?)\\s*(?:m|metres?|meters?)?", raw)
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*(?:m|metres?|meters?)?", raw)
     if not m:
         return None
     v = float(m.group(1))
@@ -75,7 +75,7 @@ class Buildings(osmium.SimpleHandler):
         height = metres(height_raw)
         levels_raw = tags.get("building:levels")
         levels = None
-        if levels_raw and re.fullmatch(r"\\d+(?:\\.\\d+)?", str(levels_raw).strip()):
+        if levels_raw and re.fullmatch(r"\d+(?:\.\d+)?", str(levels_raw).strip()):
             v = float(levels_raw)
             if 0 < v <= 300:
                 levels = v
