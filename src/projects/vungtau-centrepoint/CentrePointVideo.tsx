@@ -1,22 +1,67 @@
 import React from 'react';
-import {AbsoluteFill, Sequence, useCurrentFrame, interpolate} from 'remotion';
-const segments=[
- {from:0,to:150,title:'VŨNG TÀU CENTRE POINT',subtitle:'VỊ TRÍ DỰ ÁN'},
- {from:150,to:300,title:'LOTTE MART VŨNG TÀU',subtitle:'TUYẾN 01 • CHƯA XÁC MINH'},
- {from:300,to:450,title:'BỆNH VIỆN VŨNG TÀU',subtitle:'TUYẾN 02 • CHƯA XÁC MINH'},
- {from:450,to:600,title:'THÁP TAM THẮNG',subtitle:'TUYẾN 03 • CHƯA XÁC MINH'},
- {from:600,to:750,title:'BÃI TRƯỚC',subtitle:'TUYẾN 04 • CHƯA XÁC MINH'},
- {from:750,to:900,title:'VŨNG TÀU CENTRE POINT',subtitle:'KẾT NỐI KHU VỰC'},
+import {AbsoluteFill, Sequence, interpolate, useCurrentFrame} from 'remotion';
+import locations from './locations.json';
+import routing from './routes.geojson';
+import {NeonRoute} from './components/NeonRoute';
+import {LocationMarker} from './components/LocationMarker';
+
+type Point=[number,number];
+type RouteFeature={type:'Feature';properties:{id:string;distanceMeters:number;durationSeconds:number;verificationStatus:string};geometry:{type:'LineString';coordinates:Point[]}};
+const routes=(routing.features as RouteFeature[]);
+const destinations=locations.destinations;
+const origin=locations.origin;
+const scenes=[
+ {id:'intro',name:'VŨNG TÀU CENTRE POINT',subtitle:'VỊ TRÍ KẾT NỐI'},
+ ...destinations.map((d,i)=>({id:d.id,name:d.name.toUpperCase(),subtitle:`KẾT NỐI 0${i+1}` })),
+ {id:'outro',name:'VŨNG TÀU CENTRE POINT',subtitle:'BỐN ĐIỂM ĐẾN • MỘT VỊ TRÍ'}
 ];
-const Scene: React.FC<{title:string;subtitle:string}>=({title,subtitle})=>{
+const W=1080,H=1920;
+const rad=Math.PI/180;
+const mercator=(p:Point):Point=>[p[0]*rad,Math.log(Math.tan(Math.PI/4+p[1]*rad/2))];
+const allCoordinates:Point[]=[origin.coordinates as Point,...destinations.map(d=>d.coordinates as Point),...routes.flatMap(r=>r.geometry.coordinates)];
+const projectFactory=(points:Point[],marginX=110,marginTop=300,marginBottom=420)=>{
+ const projected=points.map(mercator);
+ const xs=projected.map(p=>p[0]),ys=projected.map(p=>p[1]);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ const scale=Math.min((W-2*marginX)/Math.max(maxX-minX,1e-8),(H-marginTop-marginBottom)/Math.max(maxY-minY,1e-8));
+ const midX=(minX+maxX)/2,midY=(minY+maxY)/2;
+ const cy=(marginTop+H-marginBottom)/2;
+ return (p:Point):Point=>{const [x,y]=mercator(p);return [W/2+(x-midX)*scale,cy-(y-midY)*scale]};
+};
+const overviewProject=projectFactory(allCoordinates);
+const Grid=()=> <g stroke="#5c7883" strokeWidth={1} opacity={0.16}>{Array.from({length:12},(_,i)=><React.Fragment key={i}><path d={`M${i*110} 0V1920`}/><path d={`M0 ${i*190}H1080`}/></React.Fragment>)}</g>;
+const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,name,subtitle})=>{
  const frame=useCurrentFrame();
- const opacity=interpolate(frame,[0,18,125,149],[0,1,1,0],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
- return <AbsoluteFill style={{background:'radial-gradient(ellipse at 48% 42%, #1b2c35 0%, #0c1620 75%)',color:'#f5f9f3',fontFamily:'Arial, sans-serif',justifyContent:'center',alignItems:'center',opacity}}>
- <div style={{position:'absolute',top:100,left:65,fontSize:28,letterSpacing:6,color:'#baff55'}}>LOCATION MOTION STUDY</div>
- <div style={{width:150,height:150,border:'4px solid #baff55',boxShadow:'0 0 55px #baff5580',borderRadius:'50%',marginBottom:65,display:'flex',justifyContent:'center',alignItems:'center'}}><div style={{width:22,height:22,background:'#baff55',borderRadius:'50%'}}/></div>
- <div style={{fontSize:58,fontWeight:700,textAlign:'center',maxWidth:900}}>{title}</div>
- <div style={{marginTop:30,fontSize:28,color:'#baff55',letterSpacing:4}}>{subtitle}</div>
- <div style={{position:'absolute',bottom:110,fontSize:25,color:'#a5b5b8'}}>PREVIEW ONLY • ROUTING DATA NOT VERIFIED</div>
+ const focus=routes.find(r=>r.properties.id===sceneId);
+ const isOverview=!focus;
+ const points=focus?[origin.coordinates as Point,...focus.geometry.coordinates]:allCoordinates;
+ const localProject=projectFactory(points);
+ const ease=interpolate(frame,[0,35],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
+ const position=(p:Point):Point=>{const a=overviewProject(p),b=localProject(p);return [a[0]+(b[0]-a[0])*ease,a[1]+(b[1]-a[1])*ease]};
+ const visibleRoutes=isOverview?routes:[focus];
+ const opacity=interpolate(frame,[0,15,132,149],[0,1,1,0],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
+ const target=destinations.find(d=>d.id===sceneId);
+ const formatKm=(m:number)=>(m/1000).toFixed(1).replace('.',',')+' km';
+ return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 44%, #1d303a 0%, #09131d 82%)',color:'#f6f9f4',fontFamily:'Arial, sans-serif',opacity,overflow:'hidden'}}>
+ <svg viewBox="0 0 1080 1920" width="1080" height="1920" style={{position:'absolute',inset:0}}>
+ <Grid/>
+ {visibleRoutes.map(r=><NeonRoute key={r.properties.id} route={{id:r.properties.id,points:r.geometry.coordinates.map(position)}} duration={isOverview?95:105} color="#baff55"/>)}
+ <LocationMarker x={position(origin.coordinates as Point)[0]} y={position(origin.coordinates as Point)[1]} label="CENTRE POINT"/>
+ {target&&<LocationMarker x={position(target.coordinates as Point)[0]} y={position(target.coordinates as Point)[1]} label={target.name.toUpperCase()}/>}
+ </svg>
+ <div style={{position:'absolute',top:108,left:66,right:66}}>
+ <div style={{fontSize:23,letterSpacing:5,color:'#baff55',fontWeight:700}}>VŨNG TÀU / LOCATION MOTION</div>
+ <div style={{marginTop:38,fontSize:62,lineHeight:1.08,fontWeight:800,maxWidth:950}}>{name}</div>
+ <div style={{marginTop:22,fontSize:25,letterSpacing:4,color:'#baff55'}}>{subtitle}</div>
+ </div>
+ {focus&&<div style={{position:'absolute',bottom:270,left:66,padding:'23px 30px',background:'#09131dd9',borderLeft:'5px solid #baff55'}}>
+ <div style={{fontSize:49,fontWeight:800}}>{formatKm(focus.properties.distanceMeters)}</div>
+ <div style={{fontSize:23,color:'#bacbd0',marginTop:8}}>OSRM • TUYẾN Ô TÔ ƯỚC TÍNH</div>
+ </div>}
+ <div style={{position:'absolute',bottom:104,left:66,right:66,fontSize:22,color:'#aebec4',lineHeight:1.5}}>
+ PREVIEW SƠ ĐỒ TỌA ĐỘ • CHƯA CÓ BẢN ĐỒ NỀN
+ <div>ĐƯỜNG ĐI OSRM CHƯA XÁC MINH • KHÔNG PHẢI BẢN XUẤT BẢN</div>
+ </div>
  </AbsoluteFill>;
 };
-export const CentrePointVideo:React.FC=()=> <AbsoluteFill style={{background:'#0c1620'}}>{segments.map(s=><Sequence key={s.from} from={s.from} durationInFrames={s.to-s.from}><Scene title={s.title} subtitle={s.subtitle}/></Sequence>)}</AbsoluteFill>;
+export const CentrePointVideo:React.FC=()=> <AbsoluteFill style={{background:'#09131d'}}>{scenes.map((s,i)=><Sequence key={s.id} from={i*150} durationInFrames={150}><Scene sceneId={s.id} name={s.name} subtitle={s.subtitle}/></Sequence>)}</AbsoluteFill>;
