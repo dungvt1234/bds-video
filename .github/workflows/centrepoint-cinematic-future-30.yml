@@ -1,0 +1,33 @@
+name: Centre Point Cinematic Future 30s
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFuture30.tsx'
+      - 'src/projects/vungtau-centrepoint/CentrePointVideo.tsx'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-cinematic-future-30.yml'
+  workflow_dispatch:
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Render 30s Cinematic Future preview
+        run: npx remotion render src/index.ts CentrePointCinematicFuture30 out/centrepoint-cinematic-future-30s.mp4 --codec h264 --concurrency 2
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-cinematic-future-30s
+          path: out/centrepoint-cinematic-future-30s.mp4
+          retention-days: 7
+          if-no-files-found: error
