@@ -1,0 +1,48 @@
+name: Centre Point Cinematic Future V3 - real OSM map 30s
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV3.tsx'
+      - 'src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs'
+      - 'src/projects/vungtau-centrepoint/basemap.geojson'
+      - 'src/projects/vungtau-centrepoint/future-footprints.json'
+      - 'src/projects/vungtau-centrepoint/routes.geojson'
+      - 'src/projects/vungtau-centrepoint/locations.json'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-cinematic-future-v3.yml'
+  workflow_dispatch:
+jobs:
+  prepare-and-render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install rendering dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript validation
+        run: npx tsc --noEmit
+      - name: Prepare true OSM road coastline building vector asset
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: Render frame 200 / local amenity ring
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV3 out/centrepoint-v3-orbit.png --frame=200
+      - name: Render frame 340 / destination marker
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV3 out/centrepoint-v3-location.png --frame=340
+      - name: Render actual 30-second V3 MP4
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV3 out/centrepoint-cinematic-future-v3-30s.mp4 --codec h264 --concurrency 2
+      - name: Upload media and geographic evidence for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-cinematic-future-v3-30s
+          path: |
+            out/centrepoint-cinematic-future-v3-30s.mp4
+            out/centrepoint-v3-orbit.png
+            out/centrepoint-v3-location.png
+            public/centrepoint-v3-map-evidence.json
+          retention-days: 7
+          if-no-files-found: error
