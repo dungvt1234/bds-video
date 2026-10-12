@@ -1,0 +1,60 @@
+name: Centre Point V9 - Four Color Routes - 35s Silent
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV9.tsx'
+      - 'src/projects/vungtau-centrepoint/data/v9-camera.json'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-v9-four-photo-finale.yml'
+  workflow_dispatch:
+jobs:
+  v9-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+      - name: Validate camera and four color integrity
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('src/projects/vungtau-centrepoint/data/v9-camera.json').read_text())
+          assert d['frames']==1050 and d['fps']==30
+          routes=d['routeColors']
+          assert set(routes)=={'lotte','hospital','tamthang','baitruoc'}
+          assert len(set(routes.values()))==4
+          assert d['photoTimings']['fourPhotoFinale']==[870,960]
+          assert [(p['id'],p['start'],p['end']) for p in d['phases'][-2:]]==[('network',760,960),('final',960,1050)]
+          for a,b in zip(d['phases'],d['phases'][1:]):
+              assert a['to']==b['from'] and a['end']==b['start']
+              for x,y in [('z1','z0'),('y1','y0'),('r1','r0')]:
+                  assert a[x]==b[y],f'camera jump {a["id"]}->{b["id"]}'
+          print('PASS: Continuous 35s V9 camera, four unique colors, 29–32s finale')
+          PY
+      - name: Prepare actual OSM basemap geometry
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: Four persistent routes immediately before photo finale
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV9 out/v9-all-routes-29s.png --frame=870
+      - name: Static network overview with all routes
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV9 out/v9-end-gallery-31s.png --frame=930
+      - name: Render 35s silent V9 base
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV9 out/centrepoint-v9-color-routes-base-35s.mp4 --codec h264 --concurrency 2
+      - name: Upload render and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-v9-colored-routes-silent-base
+          path: |
+            out/centrepoint-v9-color-routes-base-35s.mp4
+            out/v9-*.png
+            public/centrepoint-v3-map-evidence.json
+          if-no-files-found: error
+          retention-days: 7
