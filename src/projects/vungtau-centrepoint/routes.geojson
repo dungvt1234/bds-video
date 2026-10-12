@@ -1,0 +1,8 @@
+{
+  "type": "FeatureCollection",
+  "features": [],
+  "metadata": {
+    "status": "NOT_VERIFIED",
+    "note": "No fake lines, distances, or times. Populate only using verified routing geometry."
+  }
+}
