@@ -8,6 +8,8 @@ The input must come from a source whose license/attribution you have checked.
 import argparse
 import datetime
 import json
+import math
+import unicodedata
 from pathlib import Path
 
 try:
@@ -32,18 +34,65 @@ east = max(p[0] for p in points) + .009
 south = min(p[1] for p in points) - .009
 north = max(p[1] for p in points) + .009
 
+def fold(text):
+    t = unicodedata.normalize("NFD", str(text or "").lower())
+    return "".join(ch for ch in t if unicodedata.category(ch) != "Mn").replace("đ", "d")
+
+def nearby(lon, lat):
+    # Candidate geographic radius only; no travel-time/distance claim.
+    olon, olat = loc["origin"]["coordinates"]
+    dx = (lon - olon) * 111.32 * math.cos(math.radians(olat))
+    dy = (lat - olat) * 111.32
+    return math.hypot(dx, dy) <= 6
+
+def poi_group(tags):
+    a, n = tags.get("amenity"), fold(tags.get("name"))
+    if a == "marketplace":
+        return "market"
+    if a == "school":
+        return "school"
+    if (tags.get("natural") == "beach" or tags.get("leisure") == "beach_resort") and "chi linh" in n:
+        return "chi-linh-beach"
+    return None
+
 class BasemapHandler(osmium.SimpleHandler):
     def __init__(self):
         super().__init__()
         self.features = []
         self.roads = 0
         self.coasts = 0
+        self.pois = []
+        self.poi_seen = set()
+
+    def add_poi(self, osm_id, kind, tags, coord):
+        if not kind or not tags.get("name") or not nearby(*coord):
+            return
+        name = str(tags.get("name"))
+        key = (kind, fold(name), round(coord[0], 4), round(coord[1], 4))
+        if key in self.poi_seen:
+            return
+        self.poi_seen.add(key)
+        self.pois.append({
+            "type": "Feature",
+            "properties": {
+                "osmId": str(osm_id), "group": kind, "name": name,
+                "status": "CANDIDATE_REQUIRES_POI_REVIEW",
+                "note": "Unverified OSM POI candidate, not approved for publication"
+            },
+            "geometry": {"type": "Point", "coordinates": [round(coord[0], 7), round(coord[1], 7)]}
+        })
+
+    def node(self, n):
+        group = poi_group(n.tags)
+        if group and n.location.valid():
+            self.add_poi(f"node/{n.id}", group, n.tags, (n.lon, n.lat))
 
     def way(self, w):
         tags = w.tags
         is_coast = tags.get("natural") == "coastline"
         highway = tags.get("highway")
-        if not highway and not is_coast:
+        group = poi_group(tags)
+        if not highway and not is_coast and not group:
             return
         coords = []
         try:
@@ -54,6 +103,12 @@ class BasemapHandler(osmium.SimpleHandler):
         except (ValueError, RuntimeError):
             return
         if len(coords) < 2:
+            return
+        if group:
+            cx = sum(p[0] for p in coords) / len(coords)
+            cy = sum(p[1] for p in coords) / len(coords)
+            self.add_poi(f"way/{w.id}", group, tags, (cx, cy))
+        if not highway and not is_coast:
             return
         # Retain entire OSM ways intersecting the area by vertex, avoiding
         # invented clipping segments. Some edge-crossing ways may be missed.
@@ -109,4 +164,18 @@ out = {
 dest = PROJECT / "basemap.geojson"
 dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
 print(f"Saved {handler.roads} roads and {handler.coasts} coastline ways to {dest}")
+poi_out = {
+    "type": "FeatureCollection",
+    "features": handler.pois,
+    "metadata": {
+        "source": "© OpenStreetMap contributors",
+        "license": "ODbL 1.0",
+        "extractSourceUrl": args.source_url,
+        "status": "CANDIDATE_REQUIRES_POI_REVIEW",
+        "note": "No candidate means OSM extract lacks that POI: never fabricate names or positions."
+    }
+}
+poi_dest = PROJECT / "poi-candidates.geojson"
+poi_dest.write_text(json.dumps(poi_out, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+print(f"Saved {len(handler.pois)} unverified candidate amenities to {poi_dest}")
 print("Visual review and license check required; NOT VERIFIED.")
