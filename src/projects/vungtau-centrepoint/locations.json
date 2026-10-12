@@ -1,5 +1,5 @@
 {
-  "status": "PARTIAL_USER_PROVIDED",
+  "status": "ALL_COORDINATES_USER_PROVIDED_NOT_INDEPENDENTLY_VERIFIED",
   "origin": {
     "id": "centrepoint",
     "name": "Vũng Tàu Centre Point",
@@ -49,7 +49,12 @@
       "id": "baitruoc",
       "name": "Bãi Trước",
       "maps": "https://maps.app.goo.gl/J99Re641n9Q4Gt2r6",
-      "coordinates": null
+      "coordinates": [
+        107.07439545869711,
+        10.343459915589692
+      ],
+      "coordinateSource": "user-provided Google Maps coordinate",
+      "coordinateStatus": "USER_PROVIDED_NOT_INDEPENDENTLY_VERIFIED"
     }
   ]
 }
