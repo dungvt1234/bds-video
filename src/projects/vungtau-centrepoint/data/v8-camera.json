@@ -1,0 +1,153 @@
+{
+  "version": "V8_CONTINUOUS_JOURNEY_35S",
+  "fps": 30,
+  "frames": 1050,
+  "geometryStatus": "OSM map geometry real; origin/destination coordinates and OSRM candidates not independently verified",
+  "cameraMovementMeaning": "Cinematic camera travels through geographic positions, NOT an assertion of navigable road from landmark to landmark",
+  "projectionCenter": [
+    107.102,
+    10.369
+  ],
+  "pixelsPerMercatorMeter": 0.12,
+  "phases": [
+    {
+      "id": "opening",
+      "start": 0,
+      "end": 132,
+      "arrival": 132,
+      "from": "centrepoint",
+      "to": "centrepoint",
+      "z0": 1.62,
+      "z1": 2.14,
+      "y0": 1035,
+      "y1": 1035,
+      "r0": -2,
+      "r1": 0,
+      "dip": 0
+    },
+    {
+      "id": "orbit",
+      "start": 132,
+      "end": 320,
+      "arrival": 320,
+      "from": "centrepoint",
+      "to": "centrepoint",
+      "z0": 2.14,
+      "z1": 1.65,
+      "y0": 1035,
+      "y1": 1035,
+      "r0": 0,
+      "r1": 0,
+      "dip": 0
+    },
+    {
+      "id": "lotte",
+      "start": 320,
+      "end": 430,
+      "arrival": 380,
+      "from": "centrepoint",
+      "to": "lotte",
+      "z0": 1.65,
+      "z1": 1.8,
+      "y0": 1035,
+      "y1": 1150,
+      "r0": 0,
+      "r1": -1,
+      "dip": 0.28
+    },
+    {
+      "id": "hospital",
+      "start": 430,
+      "end": 540,
+      "arrival": 490,
+      "from": "lotte",
+      "to": "hospital",
+      "z0": 1.8,
+      "z1": 1.63,
+      "y0": 1150,
+      "y1": 1150,
+      "r0": -1,
+      "r1": 1,
+      "dip": 0.38
+    },
+    {
+      "id": "tamthang",
+      "start": 540,
+      "end": 650,
+      "arrival": 600,
+      "from": "hospital",
+      "to": "tamthang",
+      "z0": 1.63,
+      "z1": 1.86,
+      "y0": 1150,
+      "y1": 1150,
+      "r0": 1,
+      "r1": -0.8,
+      "dip": 0.32
+    },
+    {
+      "id": "baitruoc",
+      "start": 650,
+      "end": 760,
+      "arrival": 710,
+      "from": "tamthang",
+      "to": "baitruoc",
+      "z0": 1.86,
+      "z1": 1.78,
+      "y0": 1150,
+      "y1": 1150,
+      "r0": -0.8,
+      "r1": 0,
+      "dip": 0.25
+    },
+    {
+      "id": "network",
+      "start": 760,
+      "end": 915,
+      "arrival": 839,
+      "from": "baitruoc",
+      "to": "overview",
+      "z0": 1.78,
+      "z1": 1.07,
+      "y0": 1150,
+      "y1": 1020,
+      "r0": 0,
+      "r1": 0,
+      "dip": 0.1
+    },
+    {
+      "id": "final",
+      "start": 915,
+      "end": 1050,
+      "arrival": 982,
+      "from": "overview",
+      "to": "centrepoint",
+      "z0": 1.07,
+      "z1": 1.82,
+      "y0": 1020,
+      "y1": 1035,
+      "r0": 0,
+      "r1": 0,
+      "dip": 0.09
+    }
+  ],
+  "photoTimings": {
+    "lotte": [
+      367,
+      430
+    ],
+    "hospital": [
+      477,
+      540
+    ],
+    "tamthang": [
+      587,
+      650
+    ],
+    "baitruoc": [
+      697,
+      760
+    ]
+  },
+  "photoPolicy": "Panel feet must be georeferenced to the same projected destination marker; independent billboard card render is a screen-facing visualization. No fullscreen image."
+}
