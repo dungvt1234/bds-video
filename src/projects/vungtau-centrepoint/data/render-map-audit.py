@@ -39,6 +39,17 @@ def svgpath(points, proj, close=False):
 def esc(s):
     return html.escape(str(s), quote=True)
 
+def maplabel(s, x, y, color, anchor="start", size=17):
+    # CairoSVG may paint SVG text stroke over fill; use backing plate instead.
+    width = min(315, max(110, len(s) * size * .69 + 22))
+    left = x - width if anchor == "end" else x
+    return (
+        f'<rect x="{left-9:.1f}" y="{y-24:.1f}" width="{width+18:.1f}" height="33" '
+        'rx="6" fill="#06141D" fill-opacity=".88" stroke="#40616D" stroke-width="1"/>'
+        f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" font-size="{size}" '
+        f'font-family="DejaVu Sans,Arial" font-weight="bold" fill="{color}">{esc(s)}</text>'
+    )
+
 def validation(basemap, locations, routes, poi):
     features = basemap.get("features", [])
     roads = [f for f in features if f.get("properties", {}).get("kind") == "road" and
@@ -67,6 +78,7 @@ def run(args):
         poi = load(DATA / "poi-candidates.geojson")
     except ValueError:
         poi = {"features": []}
+    has_poi_extract = (DATA / "poi-candidates.geojson").exists() and (DATA / "poi-candidates.geojson").stat().st_size > 2
     roads, coasts, routes = validation(basemap, locations, routing, poi)
     all_locations = [locations["origin"]["coordinates"]] + [p["coordinates"] for p in locations["destinations"]]
     all_locations += [p for r in routes for p in r["geometry"]["coordinates"]]
@@ -127,7 +139,7 @@ def run(args):
     elements.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="62" stroke="#C8FF76" stroke-width="2" fill="none" stroke-dasharray="10 9" opacity=".65"/>')
     elements.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="30" stroke="#C8FF76" stroke-width="2" fill="#173C35"/>')
     elements.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="9" fill="#C8FF76"/>')
-    elements.append(f'<text x="{cx+33:.1f}" y="{cy-28:.1f}" fill="#F8FFF0" font-family="DejaVu Sans,Arial" font-size="19" font-weight="bold" stroke="#06141D" stroke-width="4" paint-order="stroke">CENTRE POINT</text>')
+    elements.append(maplabel("CENTRE POINT",cx+37,cy-30,"#F8FFF0",size=19))
     positions = {"centrepoint": origin}
     for i, dest in enumerate(locations["destinations"]):
         p = dest["coordinates"]; rid = dest["id"]
@@ -136,9 +148,8 @@ def run(args):
         c = COLORS[rid]
         elements.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="16" fill="#081D27" stroke="{c}" stroke-width="3"/>')
         elements.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="5" fill="{c}"/>')
-        dx,dy=[(24,-23),(24,34),(-26,-25),(-26,35)][i]
-        anchor = "start" if dx > 0 else "end"
-        elements.append(f'<text x="{px+dx:.1f}" y="{py+dy:.1f}" text-anchor="{anchor}" font-size="17" font-family="DejaVu Sans,Arial" font-weight="bold" fill="{c}" stroke="#06141D" stroke-width="4" paint-order="stroke">{esc(NAMES[rid])}</text>')
+        dx,dy,anchor=[(27,-23,"start"),(-28,35,"end"),(-27,-24,"end"),(27,35,"start")][i]
+        elements.append(maplabel(NAMES[rid],px+dx,py+dy,c,anchor=anchor))
     # POIs from OSM are candidates ONLY: plot distinct hollow icons, don't invent coordinates.
     candidate_counts = {"market":0,"school":0,"chi-linh-beach":0}
     for f in poi.get("features", []):
@@ -169,9 +180,9 @@ def run(args):
         legend.append(f'<text x="1127" y="{yy}" font-size="19" fill="#D4E3E4" font-family="DejaVu Sans,Arial">{esc(NAMES[rid])}</text>')
     legend+= [
       '<text x="1093" y="660" font-size="22" fill="#FFFFFF" font-family="DejaVu Sans,Arial" font-weight="bold">TIỆN ÍCH GẦN / CANDIDATE</text>',
-      f'<text x="1093" y="702" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Chợ: {candidate_counts["market"]} POI OSM</text>',
-      f'<text x="1093" y="740" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Trường học: {candidate_counts["school"]} POI OSM</text>',
-      f'<text x="1093" y="778" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Chí Linh: {candidate_counts["chi-linh-beach"]} POI OSM</text>',
+      f'<text x="1093" y="702" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Chợ: {candidate_counts["market"] if has_poi_extract else "CHƯA NẠP"}</text>',
+      f'<text x="1093" y="740" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Trường học: {candidate_counts["school"] if has_poi_extract else "CHƯA NẠP"}</text>',
+      f'<text x="1093" y="778" font-size="20" fill="#EEC97A" font-family="DejaVu Sans,Arial">Chí Linh: {candidate_counts["chi-linh-beach"] if has_poi_extract else "CHƯA NẠP"}</text>',
       '<text x="1093" y="836" font-size="17" fill="#B7C4CB" font-family="DejaVu Sans,Arial">POIs require name/location review.</text>',
       '<text x="1093" y="865" font-size="17" fill="#B7C4CB" font-family="DejaVu Sans,Arial">OSRM routes and location pins</text>',
       '<text x="1093" y="890" font-size="17" fill="#B7C4CB" font-family="DejaVu Sans,Arial">not yet independently verified.</text>',
@@ -191,7 +202,7 @@ def run(args):
         print("PNG unavailable: pip install cairosvg (SVG was saved)")
     report = {"status":"CANDIDATE_REQUIRES_VISUAL_REVIEW","roadWays":len(roads),
               "coastlineWays":len(coasts),"buildingFootprints":building_count,
-              "routes":len(routes),"poiCandidates":candidate_counts,
+              "routes":len(routes),"poiCandidates":candidate_counts,"poiStatus":"CANDIDATE_REQUIRES_REVIEW" if has_poi_extract else "NOT_EXTRACTED",
               "locationStatus":locations.get("status"),"basemapMetadata":basemap.get("metadata",{}),
               "warning":"Geographic locations, routes and POI names must be reviewed before promotional use."}
     out.with_suffix(".json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
