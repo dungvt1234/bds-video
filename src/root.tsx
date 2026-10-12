@@ -1,6 +1,7 @@
 import React from 'react';
 import {CentrePointCity3DIntro} from './projects/vungtau-centrepoint/CentrePointCity3DIntro';
 import {Composition} from 'remotion';
+import {CentrePointRealMap3DPreview} from './projects/vungtau-centrepoint/CentrePointRealMap3DPreview';
 import {CentrePointMiniature3DDemo} from './projects/vungtau-centrepoint/CentrePointMiniature3DDemo';
 import {CentrePointStory30Draft} from './projects/vungtau-centrepoint/CentrePointStory30Draft';
 import {CentrePointGroundRiseIntro} from './projects/vungtau-centrepoint/CentrePointGroundRiseIntro';
@@ -9,6 +10,7 @@ import {CentrePointHybridIntroV2} from './projects/vungtau-centrepoint/CentrePoi
 import {CentrePointVideo} from './projects/vungtau-centrepoint/CentrePointVideo';
 import {CentrePointCinematicIntro} from './projects/vungtau-centrepoint/CentrePointCinematicIntro';
 export const Root: React.FC=()=> <>
+ <Composition id="CentrePointRealMap3DPreview" component={CentrePointRealMap3DPreview} durationInFrames={150} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointMiniature3DDemo" component={CentrePointMiniature3DDemo} durationInFrames={150} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointStory30Draft" component={CentrePointStory30Draft} durationInFrames={900} fps={30} width={1080} height={1920}/>
  <Composition id="VungTauCentrePoint" component={CentrePointVideo} durationInFrames={900} fps={30} width={1080} height={1920}/>
