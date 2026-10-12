@@ -1,4 +1,5 @@
 import React from 'react';
+import {CentrePointCinematicFutureV5} from './projects/vungtau-centrepoint/CentrePointCinematicFutureV5';
 import {CentrePointCinematicFutureV4} from './projects/vungtau-centrepoint/CentrePointCinematicFutureV4';
 import {CentrePointCinematicFutureV3} from './projects/vungtau-centrepoint/CentrePointCinematicFutureV3';
 import {CentrePointCinematicFuture30} from './projects/vungtau-centrepoint/CentrePointCinematicFuture30';
@@ -13,6 +14,7 @@ import {CentrePointHybridIntroV2} from './projects/vungtau-centrepoint/CentrePoi
 import {CentrePointVideo} from './projects/vungtau-centrepoint/CentrePointVideo';
 import {CentrePointCinematicIntro} from './projects/vungtau-centrepoint/CentrePointCinematicIntro';
 export const Root: React.FC=()=> <>
+ <Composition id="CentrePointCinematicFutureV5" component={CentrePointCinematicFutureV5} durationInFrames={900} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointCinematicFutureV4" component={CentrePointCinematicFutureV4} durationInFrames={900} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointCinematicFutureV3" component={CentrePointCinematicFutureV3} durationInFrames={900} fps={30} width={1080} height={1920}/>
  <Composition id="CentrePointCinematicFuture30" component={CentrePointCinematicFuture30} durationInFrames={900} fps={30} width={1080} height={1920}/>
