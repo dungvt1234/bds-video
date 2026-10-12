@@ -1,0 +1,106 @@
+name: Centre Point Cinematic Future V6 - 35 Second Silent Preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV6.tsx'
+      - 'src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-cinematic-future-v6.yml'
+  workflow_dispatch:
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Prepare real OSM Vung Tau roads coastline footprints
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: V6 35-second composition gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('src/root.tsx').read_text()
+          assert 'id="CentrePointCinematicFutureV6" component={CentrePointCinematicFutureV6} durationInFrames={1050} fps={30}' in src
+          content=Path('src/projects/vungtau-centrepoint/CentrePointCinematicFutureV6.tsx').read_text()
+          assert 'slowedFrame(useCurrentFrame())' in content
+          assert 'outputCutFrames=[0,132,320,430,540,650,760,915,1050]' in content
+          print('PASS: 1050 frames, 30 fps, piecewise continuous time remap')
+          PY
+      - name: Still opening core at 3 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-01-core.png --frame=90
+      - name: Still market icon at 5.6 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-02-market.png --frame=168
+      - name: Still school icon at 7.6 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-03-school.png --frame=228
+      - name: Still Chi Linh beach icon at 9.4 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-04-beach.png --frame=282
+      - name: Still Lotte Mart at 13.3 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-05-lotte.png --frame=400
+      - name: Still hospital at 17 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-06-hospital.png --frame=510
+      - name: Still network at 28 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-07-network.png --frame=840
+      - name: Still final brand at 34 sec
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV6 out/v6-08-final.png --frame=1020
+      - name: Render complete 35-second silent MP4
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV6 out/centrepoint-cinematic-future-v6-silent-35s.mp4 --codec h264 --concurrency 2
+      - name: Verify MP4 video-only and approximately 35 seconds
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from struct import unpack_from
+          data=Path('out/centrepoint-cinematic-future-v6-silent-35s.mp4').read_bytes()
+          def atoms(lo,hi):
+              i=lo
+              while i+8<=hi:
+                  size,tag=unpack_from('>I4s',data,i)
+                  header=8
+                  if size==1:
+                      size=unpack_from('>Q',data,i+8)[0]; header=16
+                  elif size==0: size=hi-i
+                  if size<header or i+size>hi: raise ValueError(f'invalid MP4 atom {tag!r}')
+                  yield tag,i+header,i+size
+                  i+=size
+          types=[]; seconds=None
+          for tag,lo,hi in atoms(0,len(data)):
+              if tag!=b'moov':continue
+              for kind,x,y in atoms(lo,hi):
+                  if kind==b'mvhd':
+                      version=data[x]
+                      if version==0:
+                          scale=unpack_from('>I',data,x+12)[0]
+                          duration=unpack_from('>I',data,x+16)[0]
+                      elif version==1:
+                          scale=unpack_from('>I',data,x+20)[0]
+                          duration=unpack_from('>Q',data,x+24)[0]
+                      else: raise ValueError('unexpected movie header version')
+                      seconds=duration/scale
+                  if kind!=b'trak':continue
+                  for layer,z,w in atoms(x,y):
+                      if layer!=b'mdia':continue
+                      for field,k,l in atoms(z,w):
+                          if field==b'hdlr':types.append(data[k+8:k+12].decode('ascii'))
+          assert types==['vide'],f'Expected one video track and no audio, got {types}'
+          assert seconds is not None and abs(seconds-35.0)<.04,f'Expected 35 seconds, got {seconds}'
+          print(f'PASS: silent MP4 with tracks={types}, duration={seconds:.3f}s, bytes={len(data)}')
+          PY
+      - name: Upload video and eight stills
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-cinematic-future-v6-silent-35s
+          path: |
+            out/centrepoint-cinematic-future-v6-silent-35s.mp4
+            out/v6-*.png
+            public/centrepoint-v3-map-evidence.json
+          if-no-files-found: error
+          retention-days: 7
