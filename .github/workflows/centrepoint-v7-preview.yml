@@ -1,0 +1,26 @@
+name: Centre Point V7 Clean Preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths: ['src/projects/vungtau-centrepoint/CentrePointCinematicFutureV7.tsx', 'src/root.tsx', '.github/workflows/centrepoint-v7-preview.yml']
+  workflow_dispatch:
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - run: npx remotion render src/index.ts CentrePointCinematicFutureV7 out/v7-clean.mp4 --codec h264 --concurrency 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-v7-clean-preview
+          path: out/v7-clean.mp4
+          retention-days: 7
