@@ -1,0 +1,21 @@
+{
+  "attribution": "© OpenStreetMap contributors",
+  "license": "ODbL 1.0",
+  "sourceUrl": "https://download.geofabrik.de/asia/vietnam-latest.osm.pbf",
+  "inputFile": "vungtau.osm.pbf",
+  "retrievedAt": "2026-10-12T06:21:47.013338+00:00",
+  "bboxLonLat": [
+    107.063832,
+    10.334459915589692,
+    107.139401,
+    10.402579696173772
+  ],
+  "status": "CANDIDATE_NOT_VISUALLY_VERIFIED",
+  "counts": {
+    "NO_HEIGHT": 1468,
+    "EXPLICIT_HEIGHT": 82,
+    "LEVELS_ONLY": 57
+  },
+  "invalidGeometryCount": 1,
+  "limitations": "Area selection by in-bounds vertex; edge-crossing polygons may be missed. Missing heights are NOT inferred."
+}
