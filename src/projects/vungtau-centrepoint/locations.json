@@ -38,7 +38,12 @@
       "id": "tamthang",
       "name": "Tháp Tam Thắng",
       "maps": "https://maps.app.goo.gl/yotgfW51aBmd6xeW8",
-      "coordinates": null
+      "coordinates": [
+        107.09774131851024,
+        10.345770213477872
+      ],
+      "coordinateSource": "user-provided Google Maps coordinate",
+      "coordinateStatus": "USER_PROVIDED_NOT_INDEPENDENTLY_VERIFIED"
     },
     {
       "id": "baitruoc",
