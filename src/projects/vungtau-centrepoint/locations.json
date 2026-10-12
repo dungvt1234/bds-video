@@ -1,0 +1,35 @@
+{
+  "status": "UNVERIFIED",
+  "origin": {
+    "id": "centrepoint",
+    "name": "Vũng Tàu Centre Point",
+    "maps": "https://maps.app.goo.gl/rFxSPm5F8mshrvAA9",
+    "coordinates": null
+  },
+  "destinations": [
+    {
+      "id": "lotte",
+      "name": "Lotte Mart Vũng Tàu",
+      "maps": "https://maps.app.goo.gl/V5tJ59bjFbWvAn1n8",
+      "coordinates": null
+    },
+    {
+      "id": "hospital",
+      "name": "Bệnh viện Vũng Tàu",
+      "maps": "https://maps.app.goo.gl/2ADP8bRatnL1X6iE9",
+      "coordinates": null
+    },
+    {
+      "id": "tamthang",
+      "name": "Tháp Tam Thắng",
+      "maps": "https://maps.app.goo.gl/yotgfW51aBmd6xeW8",
+      "coordinates": null
+    },
+    {
+      "id": "baitruoc",
+      "name": "Bãi Trước",
+      "maps": "https://maps.app.goo.gl/J99Re641n9Q4Gt2r6",
+      "coordinates": null
+    }
+  ]
+}
