@@ -1,0 +1,59 @@
+name: Centre Point Cinematic Future V5 - Silent Hologram Preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV5.tsx'
+      - 'src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-cinematic-future-v5.yml'
+  workflow_dispatch:
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Compile TypeScript
+        run: npx tsc --noEmit
+      - name: Prepare authentic Vung Tau OSM roads and coastline
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: Hologram core frame
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-00-core.png --frame=78
+      - name: Animated amenity ring frame
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-01-amenities.png --frame=230
+      - name: Lotte landmark activation
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-02-lotte.png --frame=338
+      - name: Hospital target reveal
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-03-hospital.png --frame=425
+      - name: Coastal route target
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-04-coast.png --frame=608
+      - name: Network activation frame
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV5 out/v5-05-network.png --frame=735
+      - name: Render complete silent 30s master
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV5 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4 --codec h264 --concurrency 2
+      - name: Verify NO audio stream
+        run: |
+          if ffprobe -v error -select_streams a -show_entries stream=codec_name -of csv=p=0 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4 | grep -q '.'; then
+            echo 'FAIL: MP4 unexpectedly has an audio stream'
+            exit 1
+          fi
+          ffprobe -v error -select_streams v -show_entries stream=codec_name,width,height,r_frame_rate -of csv=p=0 out/centrepoint-cinematic-future-v5-SILENT-30s.mp4
+          echo 'PASS: zero audio streams'
+      - name: Upload MP4 and review frames
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-cinematic-future-v5-silent
+          path: |
+            out/centrepoint-cinematic-future-v5-SILENT-30s.mp4
+            out/v5-*.png
+            public/centrepoint-v3-map-evidence.json
+          if-no-files-found: error
+          retention-days: 7
