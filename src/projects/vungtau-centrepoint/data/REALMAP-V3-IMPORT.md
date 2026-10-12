@@ -1,19 +1,19 @@
 # Centre Point V3 — authentic Vũng Tàu map acquisition and review
 
 ## Status (do not publish)
-- `basemap.geojson` **is currently EMPTY**. The Cinematic Future V2 geometry is not an acceptable full city map.
+- `basemap.geojson` **already contains genuine OSM roads and coastline** imported in commit `e87648e58490` from the documented Geofabrik Vietnam source. QA rendered 3,839 road ways and 7 coastline ways. An earlier large-file API read returned an empty text field, which is not proof of an empty file. The old video is still not an accepted geographic render.
 - Source of route candidates: pre-existing `routes.geojson` from OSRM. They are **not independently verified**.
 - Five origin/destination coordinates: in `locations.json`, previously supplied by the project owner. Also **not independently verified**.
-- Existing `buildings.geojson` / `future-footprints.json` contain partial authentic OSM building footprints, not road/coastline geometry.
+- Existing `buildings.geojson` / `future-footprints.json` contain partial authentic OSM building footprints; the full road/coastline data is a separate existing file.
 - **Do not** render/finalize V3 or assert correct locations until imported map QA PNG is visually accepted.
 
-## Obtain BBBike city extract
+## For additional named nearby amenities: obtain PBF extract
 1. Open **https://extract.bbbike.org/** and select **Vũng Tàu**, Vietnam.
 2. Set an extract extent containing the project and four destinations plus coastal context; for initial selection use approximately **west=107.045, east=107.157, south=10.310, north=10.432**. Inspect the rectangle visually against the OSM base displayed by BBBike, because the bounds here are intended for acquisition, not a verified municipal boundary.
 3. Select **OSM PBF (.osm.pbf)**, request and download the extract from the URL BBBike actually supplies. BBBike may provide a link by email. Retain the original URL for provenance. Do not confuse an .osm XML download with a PBF extract.
 4. The user can upload the actual **.osm.pbf file into the conversation** for conversion and map review. This project does not contain the extract yet.
 
-This workflow deliberately does not scrape BBBike, invent an extract URL, or repeatedly retry blocked Overpass APIs. If BBBike does not provide PBF format, use a reputable OSM PBF source with the same area and keep its real HTTPS URL.
+The current basemap was sourced from the documented Geofabrik Vietnam PBF, not from BBBike. A new BBBike extract is OPTIONAL for base map roads, but a locally accessible PBF is still required to run the newly extended named-POI extractor for market, schools, and Chí Linh beach. Do not claim an amenity is absent when POIs have not been imported. This workflow deliberately does not scrape BBBike, invent an extract URL, or repeatedly retry blocked Overpass APIs.
 
 ## Local conversion and audited preview
 
@@ -45,6 +45,6 @@ The map uses a **single Web Mercator projection** for roads, coastline, routes, 
 - Keep OSM ODbL attribution and review source license requirements.
 - Only after preview acceptance import audited GeoJSON into V3 video, overlay amenities/HUD and render 900-frame MP4.
 
-The dedicated CI workflow `.github/workflows/centrepoint-realmap-audit.yml` generates a BLOCKED evidence report while the real map is absent; once an authentic basemap is committed on the feature branch, it renders the preview PNG and JSON for review. **CI success is not location verification.**
+The dedicated CI workflow `.github/workflows/centrepoint-realmap-audit.yml` **now renders QA PNG/SVG and evidence JSON** from the existing genuine basemap. A missing or invalid basemap is blocked, even if static Python checks pass. **CI success is not location verification.**
 
 No merges or production deployment are authorized.
