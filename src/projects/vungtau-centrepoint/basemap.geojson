@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "features": [],
+  "metadata": {
+    "status": "NOT_FETCHED",
+    "source": "© OpenStreetMap contributors",
+    "attribution": "© OpenStreetMap contributors",
+    "note": "Empty until basemap:fetch; do not imply real roads are rendered."
+  }
+}
