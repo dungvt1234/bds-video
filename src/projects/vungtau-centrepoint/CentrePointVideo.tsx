@@ -2,12 +2,15 @@ import React from 'react';
 import {AbsoluteFill, Sequence, interpolate, useCurrentFrame} from 'remotion';
 import locations from './locations.json';
 import routing from './routes.geojson';
+import basemap from './basemap.geojson';
 import {NeonRoute} from './components/NeonRoute';
 import {LocationMarker} from './components/LocationMarker';
 
 type Point=[number,number];
 type RouteFeature={type:'Feature';properties:{id:string;distanceMeters:number;durationSeconds:number;verificationStatus:string};geometry:{type:'LineString';coordinates:Point[]}};
 const routes=(routing.features as RouteFeature[]);
+type BaseFeature={properties:{kind:string;highway?:string|null};geometry:{coordinates:Point[]}};
+const mapFeatures=(basemap.features as BaseFeature[]);
 const destinations=locations.destinations;
 const origin=locations.origin;
 const scenes=[
@@ -29,7 +32,7 @@ const projectFactory=(points:Point[],marginX=110,marginTop=300,marginBottom=420)
  return (p:Point):Point=>{const [x,y]=mercator(p);return [W/2+(x-midX)*scale,cy-(y-midY)*scale]};
 };
 const overviewProject=projectFactory(allCoordinates);
-const Grid=()=> <g stroke="#5c7883" strokeWidth={1} opacity={0.16}>{Array.from({length:12},(_,i)=><React.Fragment key={i}><path d={`M${i*110} 0V1920`}/><path d={`M0 ${i*190}H1080`}/></React.Fragment>)}</g>;
+const BaseMap:React.FC<{position:(p:Point)=>Point}>=({position})=><g fill="none" strokeLinejoin="round" strokeLinecap="round">{mapFeatures.map((f,i)=>{const coast=f.properties.kind==='coastline';const main=['primary','secondary','trunk'].includes(f.properties.highway||'');const d=f.geometry.coordinates.map((p,j)=>{const [x,y]=position(p);return `${j?'L':'M'}${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ');return <path key={i} d={d} stroke={coast?'#547c8d':main?'#607580':'#354b59'} strokeWidth={coast?3:main?2.5:1.25} opacity={coast?.85:main?.65:.48}/>})}</g>;
 const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,name,subtitle})=>{
  const frame=useCurrentFrame();
  const focus=routes.find(r=>r.properties.id===sceneId);
@@ -44,9 +47,9 @@ const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,nam
  const formatKm=(m:number)=>(m/1000).toFixed(1).replace('.',',')+' km';
  return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 44%, #1d303a 0%, #09131d 82%)',color:'#f6f9f4',fontFamily:'Arial, sans-serif',opacity,overflow:'hidden'}}>
  <svg viewBox="0 0 1080 1920" width="1080" height="1920" style={{position:'absolute',inset:0}}>
- <Grid/>
+ <BaseMap position={position}/>
  {visibleRoutes.map(r=><NeonRoute key={r.properties.id} route={{id:r.properties.id,points:r.geometry.coordinates.map(position)}} duration={isOverview?95:105} color="#baff55"/>)}
- <LocationMarker x={position(origin.coordinates as Point)[0]} y={position(origin.coordinates as Point)[1]} label="CENTRE POINT"/>
+ <LocationMarker x={position(origin.coordinates as Point)[0]} y={position(origin.coordinates as Point)[1]} label="CENTRE POINT" primary/>
  {target&&<LocationMarker x={position(target.coordinates as Point)[0]} y={position(target.coordinates as Point)[1]} label={target.name.toUpperCase()}/>}
  </svg>
  <div style={{position:'absolute',top:108,left:66,right:66}}>
@@ -59,7 +62,7 @@ const Scene:React.FC<{sceneId:string;name:string;subtitle:string}>=({sceneId,nam
  <div style={{fontSize:23,color:'#bacbd0',marginTop:8}}>OSRM • TUYẾN Ô TÔ ƯỚC TÍNH</div>
  </div>}
  <div style={{position:'absolute',bottom:104,left:66,right:66,fontSize:22,color:'#aebec4',lineHeight:1.5}}>
- PREVIEW SƠ ĐỒ TỌA ĐỘ • CHƯA CÓ BẢN ĐỒ NỀN
+ {mapFeatures.length?'BẢN ĐỒ NỀN: © OPENSTREETMAP CONTRIBUTORS':'CHƯA TẢI BẢN ĐỒ NỀN OSM'}
  <div>ĐƯỜNG ĐI OSRM CHƯA XÁC MINH • KHÔNG PHẢI BẢN XUẤT BẢN</div>
  </div>
  </AbsoluteFill>;
