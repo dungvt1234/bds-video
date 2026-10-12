@@ -1,0 +1,43 @@
+name: Centre Point Cinematic Future V4 - unique cameras and terminal subtitles
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV4.tsx'
+      - 'src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-cinematic-future-v4.yml'
+  workflow_dispatch:
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: TypeScript gate
+        run: npx tsc --noEmit
+      - name: Generate authentic OSM backdrop
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: Still orbit 7 seconds
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV4 out/centrepoint-v4-orbit.png --frame=205
+      - name: Still health route 14 seconds
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV4 out/centrepoint-v4-hospital.png --frame=415
+      - name: Render V4 silent video master
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV4 out/centrepoint-v4-silent-30s.mp4 --codec h264 --concurrency 2
+      - name: Publish preview master for soundtrack mix
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-v4-silent-30s
+          path: |
+            out/centrepoint-v4-silent-30s.mp4
+            out/centrepoint-v4-orbit.png
+            out/centrepoint-v4-hospital.png
+            public/centrepoint-v3-map-evidence.json
+          if-no-files-found: error
+          retention-days: 7
