@@ -1,0 +1,59 @@
+name: Centre Point real-map evidence gate
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/data/render-map-audit.py'
+      - 'src/projects/vungtau-centrepoint/data/convert-osm-pbf.py'
+      - 'src/projects/vungtau-centrepoint/basemap.geojson'
+      - 'src/projects/vungtau-centrepoint/poi-candidates.geojson'
+      - '.github/workflows/centrepoint-realmap-audit.yml'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python syntax gate
+        run: |
+          python -m py_compile src/projects/vungtau-centrepoint/data/render-map-audit.py
+          python -m py_compile src/projects/vungtau-centrepoint/data/convert-osm-pbf.py
+      - name: Check if authentic road/coastline GeoJSON is present
+        id: gate
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path('src/projects/vungtau-centrepoint/basemap.geojson')
+          exists=p.is_file() and p.stat().st_size>2
+          Path('out').mkdir(exist_ok=True)
+          if not exists:
+              result={'status':'BLOCKED_NO_REAL_BASEMAP','roadWays':0,'coastlineWays':0,'reason':'Actual OSM road and coastline extract not supplied; no fake geometry or map image is produced.'}
+              Path('out/centrepoint-realmap-gate.json').write_text(json.dumps(result,indent=2)+'\n')
+              print('BLOCKED: supply genuine OSM PBF, convert, then rerun. No map falsely marked valid.')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('map_present='+('true' if exists else 'false')+'\n')
+          PY
+      - name: Render data-aligned map validation PNG and SVG
+        if: steps.gate.outputs.map_present == 'true'
+        run: |
+          python -m pip install --disable-pip-version-check cairosvg
+          python src/projects/vungtau-centrepoint/data/render-map-audit.py --output out/centrepoint-realmap-qa.png
+      - name: Upload audit results (not production media)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-realmap-audit-evidence
+          path: |
+            out/centrepoint-realmap-qa.png
+            out/centrepoint-realmap-qa.svg
+            out/centrepoint-realmap-qa.json
+            out/centrepoint-realmap-gate.json
+          if-no-files-found: error
+          retention-days: 7
