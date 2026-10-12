@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import buildings from './buildings.geojson';
 import basemap from './basemap.geojson';
 import locations from './locations.json';
+import {CentrePointHeroBuilding} from './CentrePointHeroBuilding';
 
 type Point=[number,number];
 type Feature={geometry:{type:string;coordinates:any};properties:{heightMeters?:number|null;buildingLevels?:number|null;heightStatus?:string;kind?:string;highway?:string}};
@@ -40,7 +41,7 @@ const preparedRoads=roadFeatures.filter(f=>f.geometry.type==='LineString'&&f.pro
  const pts=(f.geometry.coordinates as Point[]).map(p=>{const [x,y]=project(p);return new THREE.Vector3(x,1.4,y)});
  return pts.length>1?{geometry:new THREE.BufferGeometry().setFromPoints(pts),major:roadIsMajor(f.properties.highway)}:null;
 }).filter((v):v is {geometry:THREE.BufferGeometry;major:boolean}=>v!==null);
-const City:React.FC<{frame:number}>=({frame})=>{
+const City:React.FC<{frame:number;hero?:boolean}>=({frame,hero=false})=>{
  const measured=useMemo(()=>new THREE.MeshStandardMaterial({color:'#7297a5',metalness:.25,roughness:.58,emissive:'#183c49',emissiveIntensity:.22}),[]);
  const estimated=useMemo(()=>new THREE.MeshStandardMaterial({color:'#315263',metalness:.12,roughness:.8,emissive:'#12313e',emissiveIntensity:.3}),[]);
  const road=useMemo(()=>new THREE.LineBasicMaterial({color:'#537985',transparent:true,opacity:.83}),[]);
@@ -59,6 +60,7 @@ const City:React.FC<{frame:number}>=({frame})=>{
   </mesh>
   {preparedRoads.map((g,i)=><primitive key={i} object={new THREE.Line(g.geometry,g.major?majorRoad:road)}/>)}
   {preparedBuildings.map((b,i)=><mesh key={i} geometry={b.geometry} material={b.material==='measured'?measured:estimated}/>)}
+  {hero&&<CentrePointHeroBuilding/>}
   <mesh position={[0,55+Math.sin(frame*.13)*5,0]} scale={pulse} material={glow}><sphereGeometry args={[15,24,16]}/></mesh>
   <mesh position={[0,28,0]}><cylinderGeometry args={[2,2,52,12]}/><meshBasicMaterial color="#baff55" transparent opacity={.9}/></mesh>
   <mesh position={[0,4,0]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[radar,radar+3,64]}/><meshBasicMaterial color="#baff55" transparent opacity={radarOpacity} side={THREE.DoubleSide}/></mesh>
@@ -67,24 +69,24 @@ const City:React.FC<{frame:number}>=({frame})=>{
   </mesh>
  </group>;
 };
-export const CentrePointCity3DIntro:React.FC=()=>{
+export const CentrePointCity3DIntro:React.FC<{hero?:boolean}>=({hero=false})=>{
  const frame=useCurrentFrame();const {fps}=useVideoConfig();
  const title=spring({frame:frame-8,fps,config:{damping:18,stiffness:95}});
  return <AbsoluteFill style={{background:'#061019',fontFamily:'Arial,sans-serif',color:'#f4f7f4'}}>
   <ThreeCanvas width={1080} height={1920} camera={{fov:48,near:1,far:15000,position:[0,780,1050]}}>
    <color attach="background" args={['#061019']}/>
    <fog attach="fog" args={['#061019',1900,6200]}/>
-   <City frame={frame}/>
+   <City frame={frame} hero={hero}/>
   </ThreeCanvas>
   <AbsoluteFill style={{background:'linear-gradient(180deg,rgba(4,12,20,.78),transparent 32%,transparent 62%,rgba(4,12,20,.82))',pointerEvents:'none'}}/>
   <div style={{position:'absolute',top:175,left:75,right:75,opacity:title,transform:`translateY(${(1-title)*55}px)`}}>
-   <div style={{fontSize:23,color:'#baff55',letterSpacing:6,fontWeight:700}}>VŨNG TÀU / CITY 3D</div>
+   <div style={{fontSize:23,color:'#baff55',letterSpacing:6,fontWeight:700}}>VŨNG TÀU / CITY 3D {hero?'· HERO BUILDING':''}</div>
    <div style={{fontSize:66,lineHeight:1.04,fontWeight:800,marginTop:25}}>TÂM ĐIỂM<br/><span style={{color:'#baff55'}}>KẾT NỐI</span></div>
   </div>
   <div style={{position:'absolute',bottom:215,left:75,right:75}}>
    <div style={{fontSize:27,color:'#baff55',letterSpacing:4}}>01 / LOCATION</div>
    <div style={{fontSize:46,fontWeight:800,marginTop:16}}>VŨNG TÀU<br/>CENTRE POINT</div>
   </div>
-  <div style={{position:'absolute',bottom:62,left:75,right:75,fontSize:17,color:'#adbdc1'}}>© OPENSTREETMAP CONTRIBUTORS · KHỐI 3D THIẾU CHIỀU CAO CHỈ MANG TÍNH MINH HỌA</div>
+  <div style={{position:'absolute',bottom:62,left:75,right:75,fontSize:17,color:'#adbdc1'}}>© OPENSTREETMAP CONTRIBUTORS · MÔ HÌNH KIẾN TRÚC MINH HỌA, KHÔNG ĐÚNG TỶ LỆ THỰC TẾ</div>
  </AbsoluteFill>;
 };
