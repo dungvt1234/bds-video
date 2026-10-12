@@ -10,7 +10,7 @@ type Point=[number,number];
 type RouteFeature={type:'Feature';properties:{id:string;distanceMeters:number;durationSeconds:number;verificationStatus:string};geometry:{type:'LineString';coordinates:Point[]}};
 const routes=(routing.features as RouteFeature[]);
 type BaseFeature={properties:{kind:string;highway?:string|null};geometry:{coordinates:Point[]}};
-const mapFeatures=(basemap.features as BaseFeature[]);
+const mapFeatures=(basemap.features as unknown as BaseFeature[]).filter(f=>f?.properties?.kind && Array.isArray(f?.geometry?.coordinates));
 const destinations=locations.destinations;
 const origin=locations.origin;
 const scenes=[
