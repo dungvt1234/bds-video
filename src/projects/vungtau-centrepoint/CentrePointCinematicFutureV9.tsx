@@ -399,12 +399,8 @@ const Panels:React.FC<{shot:Shot;frame:number;local:number}>=({shot,frame,local}
   {/* Destination photo panels are composited over georeferenced map pins
       in the clean V7 post-render pass. Suppress V6's giant center HUD,
       target hologram, and repeated bottom card to give those photos focus. */}
-  {isNetwork&&<NetworkSurge local={local}/>}
-  {isNetwork&&<div style={{position:'absolute',bottom:485,left:76,right:76,display:'grid',gridTemplateColumns:'1fr 1fr',gap:13}}>
-   {ids.map((id,i)=><div key={id} style={{height:86,display:'flex',alignItems:'center',gap:13,padding:12,border:'1px solid '+accent(id)+'66',background:'#0A222DDC',borderRadius:12,opacity:tween(local,i*14+17,i*14+40)}}>
-    <Icon id={id} color={accent(id)} size={48}/><span style={{fontSize:21,fontWeight:700,color:WHITE}}>{['LOTTE MART','BỆNH VIỆN','THÁP TAM THẮNG','BÃI TRƯỚC'][i]}</span>
-   </div>)}
-  </div>}
+  {/* No giant radar overlay during 29-32s four-image simultaneous reveal. */}
+  {/* V9 finale: georeferenced four-photo gallery replaces old bottom HUD cards. */}
   {isFinal&&<OutroPhoto local={local}/>}
   <TerminalSubtitle shot={shot} local={local} color={c} bottom={isRoute?216:169}/>
   <div style={{position:'absolute',left:75,right:75,bottom:75,fontSize:16,letterSpacing:.6,color:'#9FB4BB'}}>© OpenStreetMap contributors · Tuyến OSRM / tọa độ đang chờ đối chiếu · Bản dựng xem trước</div>
