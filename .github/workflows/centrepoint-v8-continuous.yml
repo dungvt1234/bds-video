@@ -1,0 +1,61 @@
+name: Centre Point V8 Continuous Journey 35s Silent
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointCinematicFutureV8.tsx'
+      - 'src/projects/vungtau-centrepoint/data/v8-camera.json'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-v8-continuous.yml'
+  workflow_dispatch:
+jobs:
+  verify-and-render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Verify TypeScript
+        run: npx tsc --noEmit
+      - name: Validate 35-second continuous camera trajectory
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          cam=json.loads(Path('src/projects/vungtau-centrepoint/data/v8-camera.json').read_text())
+          phases=cam['phases']
+          assert cam['frames']==1050 and cam['fps']==30
+          assert phases[0]['start']==0 and phases[-1]['end']==1050
+          for a,b in zip(phases,phases[1:]):
+              assert a['end']==b['start'],f'timeline gap {a["id"]}->{b["id"]}'
+              assert a['to']==b['from'],f'CAMERA POSITION RESET {a["id"]}->{b["id"]}'
+              for end_key,start_key in [('z1','z0'),('r1','r0'),('y1','y0')]:
+                  assert abs(a[end_key]-b[start_key])<1e-8,f'CAMERA PARAMETER JUMP {a["id"]}->{b["id"]} {end_key}'
+          assert [(p['from'],p['to']) for p in phases[2:6]]==[
+              ('centrepoint','lotte'),('lotte','hospital'),
+              ('hospital','tamthang'),('tamthang','baitruoc')]
+          print('PASS continuous camera anchors and all 7 scene joins, no origin reset')
+          PY
+      - name: Prepare original OSM streets, coastline and buildings
+        run: node src/projects/vungtau-centrepoint/data/prepare-v3-map.mjs
+      - name: Export frame at Lotte-to-hospital join
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV8 out/v8-join-hospital.png --frame=430
+      - name: Export frame at hospital-to-Tam-Thang join
+        run: npx remotion still src/index.ts CentrePointCinematicFutureV8 out/v8-join-tamthang.png --frame=540
+      - name: Render 35-second continuous silent base
+        run: npx remotion render src/index.ts CentrePointCinematicFutureV8 out/centrepoint-v8-continuous-base-35s.mp4 --codec h264 --concurrency 2
+      - name: Upload proof and continuous video base
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-v8-continuous-base-35s
+          path: |
+            out/centrepoint-v8-continuous-base-35s.mp4
+            out/v8-join-*.png
+            public/centrepoint-v3-map-evidence.json
+          retention-days: 7
+          if-no-files-found: error
