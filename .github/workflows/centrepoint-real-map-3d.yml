@@ -30,7 +30,7 @@ jobs:
           cp /tmp/centrepoint-osm/buildings-osm-candidate.geojson public/centrepoint-buildings.geojson
       - name: Validate real building data
         run: |
-          node -e "const d=require('./public/centrepoint-buildings.geojson'); if(!Array.isArray(d.features)||d.features.length<10||d.metadata?.source!=='OpenStreetMap')process.exit(1); console.log('OSM footprints:',d.features.length)"
+          node -e "const d=JSON.parse(require('node:fs').readFileSync('./public/centrepoint-buildings.geojson','utf8')); if(!Array.isArray(d.features)||d.features.length<10||d.metadata?.source!=='OpenStreetMap')process.exit(1); console.log('OSM footprints:',d.features.length)"
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Render 5s real map 3D preview
