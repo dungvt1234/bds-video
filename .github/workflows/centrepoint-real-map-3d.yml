@@ -1,0 +1,37 @@
+name: Centre Point real-map 3D 5s preview
+on:
+  push:
+    branches: [feat/centrepoint-map-motion]
+    paths:
+      - 'src/projects/vungtau-centrepoint/CentrePointRealMap3DPreview.tsx'
+      - 'src/root.tsx'
+      - '.github/workflows/centrepoint-real-map-3d.yml'
+  workflow_dispatch:
+jobs:
+  render-real-map:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Fetch real OSM building footprints (fail closed)
+        run: node src/projects/vungtau-centrepoint/data/fetch-buildings.mjs
+      - name: Stage real map data for Remotion
+        run: |
+          mkdir -p public
+          cp src/projects/vungtau-centrepoint/buildings-osm-candidate.geojson public/centrepoint-buildings.geojson
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Render 5s real map 3D preview
+        run: npx remotion render src/index.ts CentrePointRealMap3DPreview out/centrepoint-real-map-3d-5s.mp4 --codec h264 --concurrency 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-real-map-3d-5s
+          path: out/centrepoint-real-map-3d-5s.mp4
+          retention-days: 7
+          if-no-files-found: error
