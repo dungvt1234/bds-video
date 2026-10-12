@@ -1,10 +1,15 @@
 {
-  "status": "UNVERIFIED",
+  "status": "PARTIAL_USER_PROVIDED",
   "origin": {
     "id": "centrepoint",
     "name": "Vũng Tàu Centre Point",
     "maps": "https://maps.app.goo.gl/rFxSPm5F8mshrvAA9",
-    "coordinates": null
+    "coordinates": [
+      107.11003277732524,
+      10.380586132554456
+    ],
+    "coordinateSource": "user-provided Google Maps coordinate",
+    "coordinateStatus": "USER_PROVIDED_NOT_INDEPENDENTLY_VERIFIED"
   },
   "destinations": [
     {
