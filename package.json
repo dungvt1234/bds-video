@@ -5,7 +5,8 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render:centrepoint": "remotion render src/index.ts VungTauCentrePoint out/centrepoint.mp4",
-    "routes:fetch": "node src/projects/vungtau-centrepoint/data/fetch-routes.mjs"
+    "routes:fetch": "node src/projects/vungtau-centrepoint/data/fetch-routes.mjs",
+    "basemap:fetch": "node src/projects/vungtau-centrepoint/data/fetch-basemap.mjs"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",
