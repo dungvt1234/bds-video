@@ -21,3 +21,12 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npx tsc --noEmit
+      - name: Render approved 30s storyboard preview
+        run: npx remotion render src/index.ts CentrePointStory30Draft out/centrepoint-storyboard-30s.mp4 --codec h264 --concurrency 2
+      - name: Upload storyboard preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: centrepoint-storyboard-30s
+          path: out/centrepoint-storyboard-30s.mp4
+          retention-days: 7
+          if-no-files-found: error
